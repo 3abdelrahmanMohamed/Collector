@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "29508459438",
+    "firebase_url": "https://coventree-5360b-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "coventree-5360b",
+    "storage_bucket": "coventree-5360b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:29508459438:android:615d9eedfc93a67c30863f",
+        "android_client_info": {
+          "package_name": "com.company.coventree"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "29508459438-alr2m65g4a203masju54mb9m8lptcud8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAss43Wm4SJRlQr-cHQ90eg0_iEywA0SZo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "29508459438-alr2m65g4a203masju54mb9m8lptcud8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
