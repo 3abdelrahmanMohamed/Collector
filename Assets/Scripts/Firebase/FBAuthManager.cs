@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Firebase;
 using Firebase.Auth;
+using Firebase.Database;
 using TMPro;
 using UnityEngine.SceneManagement;
 
@@ -14,12 +15,14 @@ public class FBAuthManager : MonoBehaviour
     public DependencyStatus dependencyStatus;
     public FirebaseAuth auth;
     public FirebaseUser User;
-    
+
     [Header("Login")]
-    public TMP_InputField emailLoginField;
+    public TMP_InputField UsernameLoginField;
     public TMP_InputField passwordLoginField;
     public TMP_Text warningLoginText;
     public TMP_Text confirmLoginText;
+    public static string UserEmail;
+    public static string Username;
 
 
     [Header("Register")]
@@ -31,8 +34,10 @@ public class FBAuthManager : MonoBehaviour
 
     public TMP_Text confirmRegisterText;
 
+    DatabaseReference reference;
 
-     private void Awake()
+
+    private void Awake()
     {
         FirebaseApp.CheckAndFixDependenciesAsync().ContinueWith(task =>
         {
@@ -47,7 +52,10 @@ public class FBAuthManager : MonoBehaviour
             }
         });
 
-        
+        reference = FirebaseDatabase.DefaultInstance.RootReference;
+
+
+
     }
 
     private void InitializeFirebase()
@@ -57,25 +65,42 @@ public class FBAuthManager : MonoBehaviour
     }
     public void LoginButton()
     {
-        StartCoroutine(login(emailLoginField.text, passwordLoginField.text));
+
+        Username = UsernameLoginField.text;
+        FirebaseDatabase.DefaultInstance.GetReference("Users").Child(UsernameLoginField.text).Child("email").ValueChanged += EmailTracker;
+
 
     }
 
-     private IEnumerator login(string _email , string _password)
+    public void EmailTracker(object sender, ValueChangedEventArgs args)
     {
-        var loginTask = auth.SignInWithEmailAndPasswordAsync(_email , _password);
+        DataSnapshot snapshot = args.Snapshot;
+        //Debug.Log(snapshot.Value);
+        UserEmail = snapshot.Value.ToString();
+        UsernameLoginField.text = UserEmail;
+        //Debug.Log(UserEmail);
+        //Debug.Log(UsernameLoginField.text);
+        StartCoroutine(login(UsernameLoginField.text, passwordLoginField.text));
+
+    }
+
+
+
+    private IEnumerator login(string _email, string _password)
+    {
+        var loginTask = auth.SignInWithEmailAndPasswordAsync(_email, _password);
         yield return new WaitUntil(predicate: () => loginTask.IsCompleted);
 
-        if (loginTask.Exception != null ) 
+        if (loginTask.Exception != null)
         {
-            
+
             confirmLoginText.text = "";
             Debug.LogWarning(message: $"failed to register task with {loginTask.Exception}");
             FirebaseException firebaseEx = loginTask.Exception.GetBaseException() as FirebaseException;
             AuthError errorCode = (AuthError)firebaseEx.ErrorCode;
 
-    string message = "Login Failed!";
-            switch(errorCode)
+            string message = "Login Failed!";
+            switch (errorCode)
             {
                 case AuthError.MissingEmail:
                     message = "Missing email";
@@ -96,10 +121,10 @@ public class FBAuthManager : MonoBehaviour
             warningLoginText.text = message;
         }
 
-         else
+        else
         {
             User = loginTask.Result;
-            Debug.LogFormat("User signed in succesfully: {0} ({1})" , User.DisplayName , User.Email);
+            Debug.LogFormat("User signed in succesfully: {0} ({1})", User.DisplayName, User.Email);
             warningLoginText.text = "";
             confirmLoginText.text = "logged in";
             SceneManager.LoadScene(1);
@@ -107,12 +132,13 @@ public class FBAuthManager : MonoBehaviour
         }
     }
 
-     public void registerButton()
+    public void registerButton()
     {
         StartCoroutine(register(emailRegisterField.text, passwordRegisterField.text, usernameRegisterField.text));
+        UserEmail = emailRegisterField.text;
     }
 
-     private IEnumerator register(string _email, string _password, string _username)
+    private IEnumerator register(string _email, string _password, string _username)
     {
         if (_username == "")
         {
@@ -127,7 +153,7 @@ public class FBAuthManager : MonoBehaviour
 
             var registerTask = auth.CreateUserWithEmailAndPasswordAsync(_email, _password);
             yield return new WaitUntil(predicate: () => registerTask.IsCompleted);
-             if (registerTask.Exception != null)
+            if (registerTask.Exception != null)
             {
 
                 confirmRegisterText.text = "";
@@ -156,29 +182,29 @@ public class FBAuthManager : MonoBehaviour
                 }
                 confirmRegisterText.text = message;
 
-                
+
             }
 
-             else
+            else
             {
                 User = registerTask.Result;
-                if(User!= null)
+                if (User != null)
                 {
                     UserProfile profile = new UserProfile { DisplayName = _username };
                     var profileTask = User.UpdateUserProfileAsync(profile);
                     yield return new WaitUntil(predicate: () => profileTask.IsCompleted);
                     SceneManager.LoadScene(1);
-                    if(profileTask.Exception != null)
+                    if (profileTask.Exception != null)
                     {
                         Debug.LogWarning(message: $"failed to register task with { profileTask.Exception}");
                         FirebaseException firebaseEx = profileTask.Exception.GetBaseException() as FirebaseException;
-                        AuthError errorCode = (AuthError) firebaseEx.ErrorCode;
+                        AuthError errorCode = (AuthError)firebaseEx.ErrorCode;
                         warningRegisterText.text = "Username set failed!";
 
-                        
+
                     }
                 }
-               
+
 
             }
 
